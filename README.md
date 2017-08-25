@@ -4,14 +4,11 @@
 //
 //  FMDBManager.h
 //  Demo-Custom
-//
-//  Created by ZPP on 2017/3/18.
-//  Copyright © 2017年 com.jiutian.com. All rights reserved.
-//
 
 #import "FMDatabase.h"
 
 @protocol modelProtocol <NSObject>
+ 
 /** 唯一标示，比如：uid */
 @property (nonatomic, copy) NSString *modelID;
 
