@@ -1,12 +1,115 @@
 # sqlite-save-objct
 数据库存储OC对象
+************************************************************************************
+*
+*
+*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+* * * 注意: 本人对 MJExtension 框架 和 FMDB 框架有修改代码。用原生的框架会崩溃!!!!!!!!!!!
+*
+* * * MJExtension 框架修改地方如下：
 
-//
-//  FMDBManager.h
-//  Demo-Custom
+* #pragma mark - --公共方法--
++ (void)mj_enumerateProperties:(MJPropertiesEnumeration)enumeration
+{
+    // 获得成员变量
+    NSArray *cachedProperties = [self properties];
+    
+    // 遍历成员变量
+    BOOL stop = NO;
+    for (MJProperty *property in cachedProperties) {
+        
+#warning 防止遍历到当前类的父类属性，@"hash" 属性是NSObject 中的。
+        if (!property.type.typeClass && [property.name isEqualToString:@"hash"]) break;
+        
+        enumeration(property, &stop);
+        if (stop) break;
+    }
+}    
+*
+* * * FMDB 框架修改如下：
+*
+*#pragma mark Execute updates
+
+- (BOOL)executeUpdate:(NSString*)sql error:(NSError**)outErr withArgumentsInArray:(NSArray*)arrayArgs orDictionary:(NSDictionary *)dictionaryArgs orVAList:(va_list)args {
+    
+    if (![self databaseExists]) {
+        return NO;
+    }
+    
+    if (_isExecutingStatement) {
+        [self warnInUse];
+        return NO;
+    }
+    
+    _isExecutingStatement = YES;
+    
+    int rc                   = 0x00;
+    sqlite3_stmt *pStmt      = 0x00;
+    FMStatement *cachedStmt  = 0x00;
+    
+    if (_traceExecution && sql) {
+        NSLog(@"%@ executeUpdate: %@", self, sql);
+    }
+    //**************************************************************
+#warning 对sql语句的修改，为了在数据库中插入模型
+    if ([sql containsString:@"INTO ?"]) {
+        NSMutableString *muSql = [NSMutableString stringWithString:sql];
+        NSString *tableName = [NSString stringWithFormat:@"INTO %@",arrayArgs[0]];
+       sql = [muSql stringByReplacingOccurrencesOfString:@"INTO ?" withString:tableName];
+        NSMutableArray *muArgs = [NSMutableArray arrayWithArray:arrayArgs];
+        [muArgs removeObjectAtIndex:0];
+        arrayArgs = [muArgs copy];
+    }
+    
+    if (_shouldCacheStatements) {
+        cachedStmt = [self cachedStatementForQuery:sql];
+        pStmt = cachedStmt ? [cachedStmt statement] : 0x00;
+        [cachedStmt reset];
+    }
+    
+*
+*
+**************************************************************************************
+#import <Foundation/Foundation.h>
+#import "FMDBManager.h"
+
+@interface ZHMyModel : NSObject <modelProtocol>
+
+@property (nonatomic, copy) NSString *modelID;
+
+@property (nonatomic, copy) NSString *name;
+
+@property (nonatomic, copy) NSString *message;
+
+@property (nonatomic, copy) NSString *code;
+
+@property (nonatomic, assign) BOOL isSelect;
+
+@property (nonatomic, assign) float height;
+
+@property (nonatomic, copy) NSNumber *number;
+
+@property (nonatomic, assign) NSInteger age;
+
+@end
+************************************************************************
+#import "ZHMyModel.h"
+#import "MJExtension.h"
+
+@implementation ZHMyModel
+
+@synthesize modelID=_modelID;
+
+
+MJCodingImplementation
+
+
+@end
+
 
 #import "FMDatabase.h"
 
+/*协议*/
 @protocol modelProtocol <NSObject>
  
 /** 唯一标示，比如：uid */
@@ -126,7 +229,6 @@ static inline NSString *defaultDocumentPath()
 {
     return [self createWithModel:nil withTableName:tableName];
 }
-
 
 /**
  创建数据库表格
