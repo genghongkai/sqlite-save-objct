@@ -7,26 +7,26 @@
 ### MJExtension 框架修改地方如下：
 
 # #pragma mark - --公共方法--
-+ (void)mj_enumerateProperties:(MJPropertiesEnumeration)enumeration
-{
-    // 获得成员变量
-    NSArray *cachedProperties = [self properties];
-    
-    // 遍历成员变量
-    BOOL stop = NO;
-    for (MJProperty *property in cachedProperties) {
-        
-#warning 防止遍历到当前类的父类属性，@"hash" 属性是NSObject 中的。
-        if (!property.type.typeClass && [property.name isEqualToString:@"hash"]) break;
-        
-        enumeration(property, &stop);
-        if (stop) break;
-    }
-}    
-*
-* * * FMDB 框架修改如下：
-*
-*#pragma mark Execute updates
+- + (void)mj_enumerateProperties:(MJPropertiesEnumeration)enumeration
+- {
+-   // 获得成员变量
+-    NSArray *cachedProperties = [self properties];
+-    
+-    // 遍历成员变量
+-    BOOL stop = NO;
+-    for (MJProperty *property in cachedProperties) {
+-        
+-#warning 防止遍历到当前类的父类属性，@"hash" 属性是NSObject 中的。
+-        if (!property.type.typeClass && [property.name isEqualToString:@"hash"]) break;
+-        
+-        enumeration(property, &stop);
+-        if (stop) break;
+-    }
+-}    
+-*
+-* * * FMDB 框架修改如下：
+-*
+-*#pragma mark Execute updates
 
 - (BOOL)executeUpdate:(NSString*)sql error:(NSError**)outErr withArgumentsInArray:(NSArray*)arrayArgs orDictionary:(NSDictionary *)dictionaryArgs orVAList:(va_list)args {
     
