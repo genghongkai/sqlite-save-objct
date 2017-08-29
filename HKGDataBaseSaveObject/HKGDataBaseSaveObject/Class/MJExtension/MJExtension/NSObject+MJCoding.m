@@ -27,6 +27,7 @@
         
         id value = [property valueForObject:self];
         if (value == nil) return;
+        [encoder encodeObject:value forKey:property.name];
     }];
 }
 
